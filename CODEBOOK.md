@@ -1,12 +1,12 @@
-##CODE BOOK
-###This code book summarizes the resulting data fields in tidy.txt.
+## CODE BOOK
+### This code book summarizes the resulting data fields in tidy.txt.
 
-##Measurements
-###timeBodyAccelerometer-mean()-X
-###timeBodyAccelerometer-mean()-Y
-###timeBodyAccelerometer-mean()-Z 
-###timeBodyAccelerometer-std()-X
-###timeBodyAccelerometer-std()-Y
+## Measurements
+### timeBodyAccelerometer-mean()-X
+### timeBodyAccelerometer-mean()-Y
+### timeBodyAccelerometer-mean()-Z 
+### timeBodyAccelerometer-std()-X
+### timeBodyAccelerometer-std()-Y
 timeBodyAccelerometer-std()-Z
 timeGravityAccelerometer-mean()-X
 timeGravityAccelerometer-mean()-Y
