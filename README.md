@@ -78,12 +78,12 @@ if (!file.exists(destFile)){                                                    
   download.file(URL, destfile = destFile, mode='wb')                                             ## yet downloaded
 }
 
-if (!file.exists("./UCI_HAR_Dataset")){             ##unzip your file
-  unzip(destFile)                                   ##if not yet unziped
+if (!file.exists("./UCI_HAR_Dataset")){             ## unzip your file
+  unzip(destFile)                                   ## if not yet unziped
 }
 
-setwd("./UCI HAR Dataset")     ##Set your working directory to "UCI HAR Dataset"
-                               ##for you to read the "train" and "test" directory/folder 
+setwd("./UCI HAR Dataset")     ## Set your working directory to "UCI HAR Dataset"
+                               ## for you to read the "train" and "test" directory/folder 
 
 library(data.table)   ##load Packeges install it first if
 library(dplyr)        ##not yet installed
