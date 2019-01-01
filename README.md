@@ -72,65 +72,79 @@ Jorge L. Reyes-Ortiz, Alessandro Ghio, Luca Oneto, Davide Anguita. November 2012
 # HOW THE SCRIPT WORKS
 setwd("C:/r")   ## Set your working directory
 
-URL <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"  ##Download your
-destFile <- "CourseDataset.zip"                                                                  ## file if
-if (!file.exists(destFile)){                                                                     ## it is not
-  download.file(URL, destfile = destFile, mode='wb')                                             ## yet downloaded
+## Download your  file if it is not yet downloaded
+URL <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"  
+destFile <- "CourseDataset.zip"                                                                 
+if (!file.exists(destFile)){                                                                      
+  download.file(URL, destfile = destFile, mode='wb')                                              
 }
 
-if (!file.exists("./UCI_HAR_Dataset")){             ## unzip your file
-  unzip(destFile)                                   ## if not yet unziped
+## unzip your file if not yet unziped
+if (!file.exists("./UCI_HAR_Dataset")){             
+  unzip(destFile)                                   
 }
 
-setwd("./UCI HAR Dataset")     ## Set your working directory to "UCI HAR Dataset"
-                               ## for you to read the "train" and "test" directory/folder 
+ ## Set your working directory to "UCI HAR Dataset"  for you to read the "train" and "test" directory/folder
+setwd("./UCI HAR Dataset")     
 
-library(data.table)   ##load Packeges install it first if
-library(dplyr)        ##not yet installed
+## load Packeges install it first if  not yet installed                        
+library(data.table)   
+library(dplyr)       
 
-TestActivity <- read.table("./test/y_test.txt", header = F)      ##Read y_test.txt as Activity
-TestFeatures <- read.table("./test/X_test.txt", header = F)      ##X_test.txt as Features 
-TestSubject <- read.table("./test/subject_test.txt", header = F) ##sujext_test.txt as suject from Test Directory/folder
+## Read y_test.txt as Activity X_test.txt as Features sujext_test.txt as suject from Test Directory/folder
+TestActivity <- read.table("./test/y_test.txt", header = F)      
+TestFeatures <- read.table("./test/X_test.txt", header = F)      
+TestSubject <- read.table("./test/subject_test.txt", header = F) 
 
-TrainActivity <- read.table("./train/y_train.txt", header = F)       ##Read  y_train.txt as Activity
-TrainFeatures <- read.table("./train/X_train.txt", header = F)       ##X_train.txt as Features
-TrainSubject <- read.table("./train/subject_train.txt", header = F)  ##sujext_train.txt as Suject from train Directory/folder
+## Read  y_train.txt as Activity X_train.txt as Features sujext_train.txt as Suject from train Directory/folder
+TrainActivity <- read.table("./train/y_train.txt", header = F)       
+TrainFeatures <- read.table("./train/X_train.txt", header = F)       
+TrainSubject <- read.table("./train/subject_train.txt", header = F)  
 
-ActivityLabels <- read.table("./activity_labels.txt", header = F)   ##Read activity_labels.txt
+## Read activity_labels.txt
+ActivityLabels <- read.table("./activity_labels.txt", header = F)   
 
-FeaturesNames <- read.table("./features.txt", header = F)    ##Read features.txt as FeaturesName
+ ## Read features.txt as FeaturesName
+FeaturesNames <- read.table("./features.txt", header = F)   
 
-FeaturesData <- rbind(TestFeatures, TrainFeatures) ##Combining test and train to produce FeaturesData
-SubjectData <- rbind(TestSubject, TrainSubject)    ##SubjectData
-ActivityData <- rbind(TestActivity, TrainActivity) ##ActivityData
+## Combining test and train to produce FeaturesData SubjectData ActivityData
+FeaturesData <- rbind(TestFeatures, TrainFeatures) 
+SubjectData <- rbind(TestSubject, TrainSubject)    
+ActivityData <- rbind(TestActivity, TrainActivity) 
 
-names(ActivityData) <- "ActivityN"                   ##Renaming colums in ActivityData 
-names(ActivityLabels) <- c("ActivityN", "Activity")  ##& ActivityLabels dataframes
+ ## Renaming colums in ActivityData & ActivityLabels dataframes
+names(ActivityData) <- "ActivityN"                  
+names(ActivityLabels) <- c("ActivityN", "Activity")  
 
+ ## Get factor of Activity names
+Activity <- left_join(ActivityData, ActivityLabels, "ActivityN")[, 2] 
 
-Activity <- left_join(ActivityData, ActivityLabels, "ActivityN")[, 2]  ##Get factor of Activity names
+ ## Rename SubjectData columns
+names(SubjectData) <- "Subject"    
 
-names(SubjectData) <- "Subject"     ##Rename SubjectData columns
+##Rename FeaturesData columns using columns from FeaturesNames
+names(FeaturesData) <- FeaturesNames$V2 
 
-names(FeaturesData) <- FeaturesNames$V2 ##Rename FeaturesData columns using columns from FeaturesNames
+ ## Create one large Dataset with only  SubjectData,  Activity,  FeaturesData as its variables
+DataSet <- cbind(SubjectData, Activity,FeaturesData)
 
-DataSet <- cbind(SubjectData, Activity,FeaturesData) ##Create one large Dataset with only  SubjectData,  Activity,  FeaturesData as its variables
+## Create New datasets by extracting  only the measurements on the mean  and standard deviation for each measurement
+subFeaturesNames <- FeaturesNames$V2[grep("mean\\(\\)|std\\(\\)", FeaturesNames$V2)] 
+DataNames <- c("Subject", "Activity", as.character(subFeaturesNames))                
+DataSet <- subset(DataSet, select=DataNames)                                         
 
+ ## Rename the columns   of the large dataset using more descriptive  activity names
+names(DataSet)<-gsub("^t", "time", names(DataSet))              
+names(DataSet)<-gsub("^f", "frequency", names(DataSet))         
+names(DataSet)<-gsub("Acc", "Accelerometer", names(DataSet))     
+names(DataSet)<-gsub("Gyro", "Gyroscope", names(DataSet))        
+names(DataSet)<-gsub("Mag", "Magnitude", names(DataSet))         
+names(DataSet)<-gsub("BodyBody", "Body", names(DataSet))         
 
-subFeaturesNames <- FeaturesNames$V2[grep("mean\\(\\)|std\\(\\)", FeaturesNames$V2)] ####Create New datasets by extracting
-DataNames <- c("Subject", "Activity", as.character(subFeaturesNames))                ## only the measurements on the mean 
-DataSet <- subset(DataSet, select=DataNames)                                         ## and standard deviation for each measurement
+## Create a second, independent tidy data set with the average of each variable for each activity and each subject
+SecondDataSet<-aggregate(. ~Subject + Activity, DataSet, mean)                        
+SecondDataSet<-SecondDataSet[order(SecondDataSet$Subject,SecondDataSet$Activity),]   
 
-
-names(DataSet)<-gsub("^t", "time", names(DataSet))               ##Rename the columns
-names(DataSet)<-gsub("^f", "frequency", names(DataSet))          ## of the large dataset 
-names(DataSet)<-gsub("Acc", "Accelerometer", names(DataSet))     ##using more descriptive 
-names(DataSet)<-gsub("Gyro", "Gyroscope", names(DataSet))        ## activity names
-names(DataSet)<-gsub("Mag", "Magnitude", names(DataSet))         ##
-names(DataSet)<-gsub("BodyBody", "Body", names(DataSet))         ##
-
-SecondDataSet<-aggregate(. ~Subject + Activity, DataSet, mean)                       ##Create a second, independent tidy data set with the t
-SecondDataSet<-SecondDataSet[order(SecondDataSet$Subject,SecondDataSet$Activity),]   ##average of each variable for each activity and each subjec
-
-write.table(SecondDataSet, file = "tidydata.txt",row.name=FALSE)      ##Create .txt file containing the table
+ ## Create .txt file containing the table
+write.table(SecondDataSet, file = "tidydata.txt",row.name=FALSE)     
 
